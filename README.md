@@ -1,225 +1,570 @@
-Legal-Tech AI Assistant for Andhra Pradesh Police - Complete Application Summary
-Overview
-The Legal-Tech AI Assistant is a comprehensive web application designed specifically for the Andhra Pradesh Police Department to streamline petition processing, legal claims analysis, and evidence evaluation using advanced AI technology. The system provides a secure, role-based platform that leverages OpenAI's GPT-4 model through Supabase Edge Functions to analyze legal documents and generate actionable insights for law enforcement officers.
+Legal-Tech AI Assistant - Comprehensive Technical Documentation
+System Architecture Overview
+High-Level Architecture
 
-Core Architecture
-Frontend Technology Stack
-React 18 with TypeScript for type-safe development
-Tailwind CSS for responsive, modern UI design
-Framer Motion for smooth animations and transitions
-React Router DOM for client-side routing
-Lucide React for consistent iconography
-Vite as the build tool and development server
-Backend Infrastructure
-Supabase as the primary backend-as-a-service platform
-PostgreSQL database with Row Level Security (RLS)
-Supabase Edge Functions for serverless AI processing
-OpenAI GPT-4 integration for legal document analysis
-Supabase Storage for secure file management
-Security Architecture
-End-to-end encryption for all data transfers
-JWT-based authentication with role-based access control
-Row Level Security (RLS) policies for data protection
-Secure API key management through environment variables
-Complete audit trails for legal compliance
-User Roles and Permissions
-1. Investigating Officer (IO)
-Process new petitions and upload documents
-Analyze claims and evaluate evidence
-Generate investigation reports
-Access assigned cases and station-specific data
-2. Station House Officer (SHO)
-Manage all petitions within their station
-Assign cases to investigating officers
-Review and approve investigation reports
-Monitor station performance metrics
-3. Superintendent of Police (SP)
-Access all petitions across multiple stations
-Review quality assessments and performance metrics
-Generate comprehensive reports and analytics
-Oversee departmental operations
-4. Administrator
-Full system access and user management
-System configuration and maintenance
-Advanced analytics and reporting
-Database administration capabilities
-Core Features and Functionality
-1. Secure Document Processing
-Multi-format support: PDF, DOCX, TXT, JPEG, PNG files
-Intelligent text extraction from various document types
-OCR capabilities for image-based documents
-File validation with size limits and type checking
-Secure storage with encrypted file management
-2. AI-Powered Legal Analysis
-Claims extraction using GPT-4 with Indian legal framework knowledge
-Confidence scoring (0.0-1.0) for each extracted claim
-Legal section mapping to relevant Indian Penal Code sections
-Timeline generation from petition content
-Risk assessment and severity classification
-3. Evidence Quality Evaluation
-8-point evaluation criteria:
-Relevance to legal claims
-Clarity and readability
-Completeness of information
-Specificity of details
-Timeliness of capture
-Source credibility
-Metadata presence
-Context alignment
-Overall quality scoring with Good/Moderate/Bad ratings
-Improvement recommendations for evidence collection
-4. Comprehensive Reporting System
-IO Investigation Reports with detailed findings
-Executive summaries for management review
-Performance dashboards with metrics and analytics
-Timeline visualizations of case progression
-Risk factor identification and mitigation strategies
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   React Client  │────│  Supabase Edge   │────│   OpenAI API    │
+│   (Frontend)    │    │   Functions      │    │   (GPT-4)       │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│  Supabase Auth  │    │  PostgreSQL DB   │    │  Supabase       │
+│  & Storage      │    │  with RLS        │    │  Storage        │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+Frontend Architecture
+Technology Stack
+React 18.3.1 - Modern React with concurrent features
+TypeScript 5.5.3 - Type safety and enhanced developer experience
+Vite 5.4.2 - Fast build tool and development server
+Tailwind CSS 3.4.1 - Utility-first CSS framework
+Framer Motion 11.5.4 - Animation library for smooth transitions
+React Router DOM 6.26.1 - Client-side routing
+Lucide React 0.344.0 - Icon library
+Component Architecture
+
+src/
+├── components/
+│   ├── Layout.tsx              # Main application layout
+│   ├── AuthGuard.tsx           # Authentication wrapper
+│   ├── LoginForm.tsx           # Authentication interface
+│   └── ConnectionStatus.tsx    # System health monitoring
+├── pages/
+│   ├── Dashboard.tsx           # Main dashboard
+│   ├── UserDashboard.tsx       # User-specific dashboard
+│   ├── ProcessPetition.tsx     # Document upload & processing
+│   ├── ClaimsAnalysis.tsx      # Legal claims review
+│   ├── EvidenceEvaluation.tsx  # Evidence quality assessment
+│   └── ReportGeneration.tsx    # Report creation
+├── context/
+│   ├── AuthContext.tsx         # Authentication state management
+│   └── PetitionContext.tsx     # Petition data management
+├── services/
+│   └── api.ts                  # API service layer
+└── utils/
+    └── connectionTest.ts       # System connectivity testing
+State Management
+React Context API for global state management
+useReducer hooks for complex state logic
+Local Storage for session persistence
+Real-time updates through Supabase subscriptions
+Authentication Flow
+
+interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  role: 'SHO' | 'IO' | 'SP' | 'Admin';
+  badgeNumber: string;
+  stationId?: string;
+  department: string;
+  designation?: string;
+  isActive: boolean;
+  lastLogin?: string;
+  createdAt: string;
+}
+Backend Architecture
+Supabase Edge Functions
+Four serverless functions handle AI processing:
+
+1. upload-petition
+
+// Handles secure file uploads and text extraction
+POST /functions/v1/upload-petition
+Content-Type: multipart/form-data
+
+Request:
+- petition: File (PDF, DOCX, TXT, JPEG, PNG)
+- userId: string
+- description?: string
+
+Response:
+{
+  petitionId: string,
+  petitionNumber: string,
+  fileName: string,
+  fileType: string,
+  fileSize: number,
+  contentPreview: string,
+  message: string
+}
+2. analyze-petition
+
+// AI-powered legal claims extraction
+POST /functions/v1/analyze-petition
+Content-Type: application/json
+
+Request:
+{
+  petitionId: string,
+  content: string
+}
+
+Response: PetitionAnalysis {
+  summary: string,
+  claims: ExtractedClaim[],
+  timeline: TimelineEvent[],
+  riskFactors: string[],
+  recommendations: string[],
+  overallSeverity: 'low' | 'medium' | 'high' | 'urgent',
+  processingTime: number
+}
+3. evaluate-evidence
+
+// Evidence quality assessment
+POST /functions/v1/evaluate-evidence
+Content-Type: application/json
+
+Request:
+{
+  evidenceId: string,
+  description: string,
+  evidenceType: string,
+  claimId: string,
+  petitionContext?: string
+}
+
+Response: EvidenceEvaluation {
+  relevance: number,      // 0-100
+  clarity: number,        // 0-100
+  completeness: number,   // 0-100
+  specificity: number,    // 0-100
+  timeliness: number,     // 0-100
+  credibility: number,    // 0-100
+  metadata: number,       // 0-100
+  contextMatch: number,   // 0-100
+  overallScore: number,
+  rating: 'Good' | 'Moderate' | 'Bad',
+  issues: string,
+  recommendations: string[],
+  processingTime: number
+}
+4. test-openai
+
+// System health check for OpenAI connectivity
+POST /functions/v1/test-openai
+Content-Type: application/json
+
+Response:
+{
+  status: 'connected' | 'error' | 'warning',
+  message: string,
+  configured: boolean,
+  responseTime: number,
+  model: string,
+  timestamp: string
+}
 Database Schema
-Users Table
-Stores officer information with role-based access:
+Core Tables Structure
 
-Personal details (name, email, badge number)
-Role assignment (SHO, IO, SP, Admin)
-Station assignment and department information
-Activity tracking and performance metrics
-Petitions Table
-Central repository for all petition data:
+-- Users table with role-based access
+CREATE TABLE users (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email text UNIQUE NOT NULL,
+  role text NOT NULL DEFAULT 'SHO' CHECK (role IN ('SHO', 'IO', 'SP', 'Admin')),
+  full_name text NOT NULL,
+  badge_number text UNIQUE NOT NULL,
+  station_id text,
+  phone_number text,
+  department text DEFAULT 'Andhra Pradesh Police',
+  designation text,
+  is_active boolean DEFAULT true,
+  last_login timestamptz,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
 
-Petition metadata and content
-Status tracking and priority levels
-Assignment information and progress tracking
-AI analysis results and quality scores
-File attachment references
-Claims Table
-Extracted legal claims from petitions:
+-- Petitions table - central data repository
+CREATE TABLE petitions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  petition_number text UNIQUE NOT NULL,
+  title text NOT NULL,
+  description text NOT NULL,
+  petitioner_name text NOT NULL,
+  petitioner_contact text NOT NULL,
+  petitioner_address text NOT NULL,
+  status text NOT NULL DEFAULT 'pending' 
+    CHECK (status IN ('pending', 'under_investigation', 'review_needed', 'closed', 
+                     'claims_extracted', 'actions_assigned', 'evidence_submitted', 'report_generated')),
+  priority text NOT NULL DEFAULT 'medium' 
+    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  assigned_to uuid REFERENCES users(id),
+  created_by uuid NOT NULL REFERENCES users(id),
+  station_id text,
+  ai_summary text,
+  completion_percentage integer DEFAULT 0 CHECK (completion_percentage >= 0 AND completion_percentage <= 100),
+  quality_score numeric(3,2) CHECK (quality_score >= 0 AND quality_score <= 1),
+  overall_rating text CHECK (overall_rating IN ('excellent', 'good', 'satisfactory', 'needs_improvement', 'poor')),
+  fir_required boolean DEFAULT false,
+  fir_number text,
+  fir_justification text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  file_attachments jsonb DEFAULT '[]'::jsonb
+);
 
-Claim categorization and confidence scores
-Legal section mappings
-Status tracking and verification
-AI extraction metadata
-Evidence Table
-Evidence management and quality assessment:
+-- Claims table - extracted legal claims
+CREATE TABLE claims (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  petition_id uuid NOT NULL REFERENCES petitions(id) ON DELETE CASCADE,
+  claim_number integer NOT NULL,
+  claim_text text NOT NULL,
+  claim_type text NOT NULL DEFAULT 'other' 
+    CHECK (claim_type IN ('property_dispute', 'harassment', 'fraud', 'theft', 'assault', 'corruption', 'other')),
+  legal_sections text[] DEFAULT '{}',
+  confidence_score numeric(3,2) NOT NULL DEFAULT 0.5 
+    CHECK (confidence_score >= 0 AND confidence_score <= 1),
+  status text NOT NULL DEFAULT 'pending' 
+    CHECK (status IN ('pending', 'verified', 'rejected', 'under_investigation', 'resolved')),
+  priority text NOT NULL DEFAULT 'medium' 
+    CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  extracted_by_ai boolean DEFAULT true,
+  edited_by uuid REFERENCES users(id),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(petition_id, claim_number)
+);
 
-File metadata and storage references
-Quality evaluation scores
-Verification status and chain of custody
-Analysis results and recommendations
-Additional Tables
-Investigations: Detailed investigation records
-Quality Assessments: Performance evaluations
-Performance Metrics: Officer and station analytics
-Actions: Task management and tracking
-AI Analysis Logs: Audit trails for AI operations
-AI Integration and Processing
-Secure Backend Processing
-All AI operations are processed through Supabase Edge Functions to ensure:
+-- Evidence table - file and quality management
+CREATE TABLE evidence (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  petition_id uuid NOT NULL REFERENCES petitions(id) ON DELETE CASCADE,
+  claim_id uuid REFERENCES claims(id) ON DELETE CASCADE,
+  action_id uuid REFERENCES actions(id) ON DELETE CASCADE,
+  file_name text NOT NULL,
+  file_path text NOT NULL,
+  file_type text NOT NULL,
+  file_size bigint NOT NULL,
+  evidence_type text NOT NULL DEFAULT 'other' 
+    CHECK (evidence_type IN ('document', 'photograph', 'audio', 'video', 'witness_statement', 'expert_report', 'other')),
+  relevance_score numeric(3,2) DEFAULT 0.5 CHECK (relevance_score >= 0 AND relevance_score <= 1),
+  quality_score numeric(3,2) DEFAULT 0.5 CHECK (quality_score >= 0 AND quality_score <= 1),
+  ai_analysis text,
+  has_signature boolean,
+  is_authentic boolean DEFAULT true,
+  logical_consistency_score numeric(3,2) CHECK (logical_consistency_score >= 0 AND logical_consistency_score <= 1),
+  uploaded_by uuid NOT NULL REFERENCES users(id),
+  verified_by uuid REFERENCES users(id),
+  verification_notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+Row Level Security (RLS) Policies
 
-API key security: OpenAI keys never exposed to frontend
-Data protection: All processing on encrypted servers
-Audit compliance: Complete logging of AI operations
-Scalable processing: Serverless architecture for high availability
-Legal Framework Integration
-The AI system is trained on:
+-- Example RLS policy for petitions
+CREATE POLICY "Users can read petitions in their station or assigned to them"
+ON petitions FOR SELECT TO authenticated
+USING (
+  created_by = auth.uid() OR 
+  assigned_to = auth.uid() OR 
+  EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = auth.uid() AND role IN ('Admin', 'SP')
+  ) OR 
+  EXISTS (
+    SELECT 1 FROM users u1, users u2 
+    WHERE u1.id = auth.uid() 
+    AND u2.id = petitions.created_by 
+    AND u1.station_id = u2.station_id
+  )
+);
+Storage Architecture
 
-Bharatiya Nyaya Sanhita (BNS) 2023
-Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023
-Indian Penal Code (IPC) sections
-Andhra Pradesh Police procedures
-Evidence collection standards
-Analysis Capabilities
-Multi-language support for regional content
-Context-aware processing with legal precedents
-Confidence scoring based on evidence quality
-Recommendation generation for next actions
-Timeline extraction with event categorization
-User Interface and Experience
-Dashboard Overview
-Role-specific dashboards with relevant metrics
-Real-time status updates for active cases
-Performance indicators and trend analysis
-Quick action buttons for common tasks
-System health monitoring with connection status
-Petition Processing Workflow
-Document Upload: Drag-and-drop interface with validation
-AI Analysis: Real-time processing with progress indicators
-Claims Review: Interactive claim examination and verification
-Evidence Evaluation: Comprehensive quality assessment
-Report Generation: Automated report creation with customization
-Evidence Management
-Visual evidence gallery with preview capabilities
-Quality scoring visualization with detailed breakdowns
-Recommendation system for evidence improvement
-Chain of custody tracking with audit trails
-Batch processing for multiple evidence items
-Security and Compliance
-Data Protection
-End-to-end encryption for all data transfers
-At-rest encryption for stored documents
-Access logging for all user activities
-Data retention policies with automated cleanup
-Backup and recovery systems
-Legal Compliance
-Audit trails for all system operations
-Evidence integrity maintenance
-Chain of custody documentation
-Performance monitoring for quality assurance
-Regulatory compliance with Indian legal standards
-Authentication and Authorization
-Multi-factor authentication support
-Role-based access control (RBAC)
-Session management with timeout controls
-Password policies and security requirements
-Account lockout protection
-Performance and Scalability
-System Performance
-Sub-second response times for most operations
-Concurrent user support for multiple officers
-Efficient database queries with optimized indexes
-Caching strategies for frequently accessed data
-Load balancing for high availability
-Scalability Features
-Serverless architecture with auto-scaling
-Database partitioning for large datasets
-CDN integration for file delivery
-Microservices design for modular scaling
-Monitoring and alerting for proactive management
-Integration Capabilities
-External System Integration
-Court management systems for case filing
-Forensic laboratories for evidence analysis
-Government databases for verification
-Communication systems for notifications
-Reporting platforms for analytics
-API Architecture
-RESTful APIs for external integrations
-Webhook support for real-time updates
-Rate limiting for API protection
-Documentation with OpenAPI specifications
-Version control for backward compatibility
-Deployment and Operations
+-- Supabase Storage bucket configuration
+Bucket: petition-files
+- Public: false
+- File size limit: 50MB
+- Allowed MIME types: 
+  * application/pdf
+  * application/vnd.openxmlformats-officedocument.wordprocessingml.document
+  * text/plain
+  * image/jpeg
+  * image/png
+
+-- Storage policies for file access control
+Policy: "Users can read accessible petition files"
+Target: authenticated
+Operations: SELECT
+Definition: bucket_id = 'petition-files' AND check_petition_file_access(name)
+AI Integration Architecture
+OpenAI GPT-4 Integration
+
+// System prompt for legal analysis
+const systemPrompt = `You are a specialized AI assistant for the Andhra Pradesh Police Department, 
+trained in Indian legal frameworks and petition analysis.
+
+LEGAL CLAIM TYPES (based on Indian Penal Code):
+- Physical Assault (IPC Sections 351-358)
+- Police Negligence (Section 166 BNS 2023)
+- Procedural Violation (BNSS 2023)
+- Property Dispute (IPC Sections 441-462)
+- Harassment (IPC Section 354)
+- Fraud (IPC Sections 415-420)
+- Corruption (Prevention of Corruption Act)
+
+CONFIDENCE SCORING (0.0 to 1.0):
+- 0.9-1.0: Clear, unambiguous legal claim
+- 0.8-0.89: Strong claim with minor ambiguities
+- 0.7-0.79: Moderate claim requiring clarification
+- 0.6-0.69: Weak claim with significant gaps
+- Below 0.6: Insufficient evidence for legal claim`;
+Evidence Evaluation Criteria
+
+interface EvaluationCriteria {
+  relevance: number;      // How directly evidence supports the claim
+  clarity: number;        // Readability and visual quality
+  completeness: number;   // Whether evidence provides full context
+  specificity: number;    // Level of detail (What, When, Where, How)
+  timeliness: number;     // When evidence was captured vs incident
+  credibility: number;    // Source verification and authenticity
+  metadata: number;       // Timestamp, GPS, author information
+  contextMatch: number;   // Alignment with complaint narrative
+}
+AI Processing Pipeline
+
+1. Document Upload → Text Extraction → Content Validation
+2. AI Analysis Request → GPT-4 Processing → Response Validation
+3. Claims Extraction → Confidence Scoring → Legal Mapping
+4. Evidence Evaluation → Quality Assessment → Recommendations
+5. Report Generation → Data Aggregation → PDF Creation
+Security Implementation
+Authentication & Authorization
+
+// JWT token structure
+interface JWTPayload {
+  sub: string;           // User ID
+  email: string;
+  role: string;
+  station_id?: string;
+  iat: number;           // Issued at
+  exp: number;           // Expiration
+}
+
+// Role-based access control
+const permissions = {
+  IO: ['read_own_petitions', 'create_petitions', 'update_evidence'],
+  SHO: ['read_station_petitions', 'assign_cases', 'approve_reports'],
+  SP: ['read_all_petitions', 'generate_analytics', 'quality_assessment'],
+  Admin: ['full_access', 'user_management', 'system_config']
+};
+Data Encryption
+In Transit: TLS 1.3 encryption for all API communications
+At Rest: AES-256 encryption for database and file storage
+API Keys: Stored in Supabase environment variables, never exposed to frontend
+Session Management: Secure JWT tokens with configurable expiration
+Audit Logging
+
+-- AI analysis logs for audit compliance
+CREATE TABLE ai_analysis_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  petition_id uuid REFERENCES petitions(id) ON DELETE CASCADE,
+  analysis_type text NOT NULL CHECK (analysis_type IN 
+    ('claim_extraction', 'action_planning', 'evidence_analysis', 'ocr_processing', 'quality_assessment')),
+  input_data jsonb,
+  ai_response jsonb,
+  confidence_score numeric(5,2) CHECK (confidence_score >= 0 AND confidence_score <= 100),
+  processed_by uuid NOT NULL REFERENCES users(id),
+  processing_time timestamptz NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+Performance Optimization
+Database Optimization
+
+-- Strategic indexes for performance
+CREATE INDEX idx_petitions_status ON petitions(status);
+CREATE INDEX idx_petitions_priority ON petitions(priority);
+CREATE INDEX idx_petitions_assigned_to ON petitions(assigned_to);
+CREATE INDEX idx_petitions_created_by ON petitions(created_by);
+CREATE INDEX idx_petitions_station_id ON petitions(station_id);
+CREATE INDEX idx_claims_petition_id ON claims(petition_id);
+CREATE INDEX idx_evidence_petition_id ON evidence(petition_id);
+Frontend Performance
+Code Splitting: Route-based lazy loading
+Memoization: React.memo for expensive components
+Virtual Scrolling: For large data lists
+Image Optimization: Lazy loading and compression
+Bundle Optimization: Tree shaking and minification
+Caching Strategy
+
+// API response caching
+const cacheConfig = {
+  petitions: { ttl: 300 },      // 5 minutes
+  claims: { ttl: 600 },         // 10 minutes
+  evidence: { ttl: 900 },       // 15 minutes
+  reports: { ttl: 1800 }        // 30 minutes
+};
+Error Handling & Monitoring
+Error Handling Architecture
+
+// Centralized error handling
+interface ApiError {
+  code: string;
+  message: string;
+  details?: any;
+  timestamp: string;
+  requestId: string;
+}
+
+// Error boundary for React components
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log error to monitoring service
+    console.error('Application Error:', error, errorInfo);
+  }
+}
+Monitoring & Logging
+Application Performance Monitoring (APM) through Supabase
+Real-time error tracking with stack traces
+Performance metrics for API response times
+User activity logging for audit compliance
+System health checks with automated alerts
+Deployment Architecture
 Production Environment
-Cloud-native deployment on Supabase infrastructure
-SSL/TLS encryption for all communications
-Geographic redundancy for disaster recovery
-Automated backups with point-in-time recovery
-Monitoring dashboards for operational visibility
-Maintenance and Updates
-Automated deployment pipelines
-Database migration management
-Feature flag controls for gradual rollouts
-Performance monitoring with alerting
-Security patch management
-Future Enhancements
-Planned Features
-Mobile application for field officers
-Voice-to-text integration for report dictation
-Advanced analytics with machine learning insights
-Integration with body cameras for evidence collection
-Multilingual support for regional languages
-AI Improvements
-Custom model training on local legal data
-Predictive analytics for case outcomes
-Automated case prioritization based on severity
-Smart evidence suggestions for investigation
-Performance prediction for officer assignments
-This comprehensive Legal-Tech AI Assistant represents a significant advancement in law enforcement technology, providing the Andhra Pradesh Police with powerful tools to improve efficiency, accuracy, and accountability in their operations while maintaining the highest standards of security and legal compliance.
+
+# Deployment configuration
+Environment: Production
+Platform: Supabase Cloud
+Database: PostgreSQL 15+ with RLS
+Storage: Supabase Storage with CDN
+Functions: Deno runtime on Edge
+SSL: Automatic HTTPS with Let's Encrypt
+Backup: Automated daily backups with 30-day retention
+CI/CD Pipeline
+
+# GitHub Actions workflow
+name: Deploy to Production
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Build application
+        run: npm run build
+      - name: Deploy to Supabase
+        run: supabase deploy
+API Documentation
+REST API Endpoints
+
+// Authentication endpoints
+POST /auth/login
+POST /auth/logout
+POST /auth/refresh
+GET  /auth/user
+
+// Petition management
+GET    /api/petitions
+POST   /api/petitions
+GET    /api/petitions/:id
+PUT    /api/petitions/:id
+DELETE /api/petitions/:id
+
+// Claims management
+GET    /api/petitions/:id/claims
+POST   /api/petitions/:id/claims
+PUT    /api/claims/:id
+DELETE /api/claims/:id
+
+// Evidence management
+GET    /api/petitions/:id/evidence
+POST   /api/petitions/:id/evidence
+PUT    /api/evidence/:id
+DELETE /api/evidence/:id
+
+// Reports
+GET    /api/reports
+POST   /api/reports/generate
+GET    /api/reports/:id
+WebSocket Events
+
+// Real-time updates
+interface WebSocketEvents {
+  'petition:created': PetitionCreatedEvent;
+  'petition:updated': PetitionUpdatedEvent;
+  'claim:extracted': ClaimExtractedEvent;
+  'evidence:evaluated': EvidenceEvaluatedEvent;
+  'report:generated': ReportGeneratedEvent;
+}
+Testing Strategy
+Unit Testing
+
+// Jest configuration for React components
+describe('ProcessPetition Component', () => {
+  test('should upload file successfully', async () => {
+    const mockFile = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
+    render(<ProcessPetition />);
+    
+    const uploadArea = screen.getByText(/drop your petition documents/i);
+    fireEvent.drop(uploadArea, { dataTransfer: { files: [mockFile] } });
+    
+    await waitFor(() => {
+      expect(screen.getByText(/file uploaded successfully/i)).toBeInTheDocument();
+    });
+  });
+});
+Integration Testing
+
+// API integration tests
+describe('Petition API', () => {
+  test('should create petition with valid data', async () => {
+    const petitionData = {
+      title: 'Test Petition',
+      description: 'Test Description',
+      petitioner_name: 'John Doe'
+    };
+    
+    const response = await apiService.createPetition(petitionData);
+    expect(response.success).toBe(true);
+    expect(response.data.id).toBeDefined();
+  });
+});
+End-to-End Testing
+
+// Playwright E2E tests
+test('complete petition processing workflow', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('[name="email"]', 'test@police.gov.in');
+  await page.fill('[name="password"]', 'password123');
+  await page.click('button[type="submit"]');
+  
+  await page.goto('/process');
+  await page.setInputFiles('input[type="file"]', 'test-petition.pdf');
+  await page.click('text=Start Secure AI Analysis');
+  
+  await page.waitForSelector('text=Analysis complete!');
+  await expect(page.locator('text=legal claims extracted')).toBeVisible();
+});
+Scalability Considerations
+Horizontal Scaling
+Serverless Functions: Auto-scaling based on demand
+Database Connections: Connection pooling with PgBouncer
+File Storage: CDN distribution for global access
+Load Balancing: Automatic traffic distribution
+Vertical Scaling
+Database Performance: Query optimization and indexing
+Memory Management: Efficient data structures and caching
+CPU Optimization: Asynchronous processing for AI operations
+Storage Optimization: File compression and archival policies
+Future Scaling Plans
+
+// Microservices architecture for scale
+interface ServiceArchitecture {
+  authService: 'User authentication and authorization';
+  petitionService: 'Petition management and processing';
+  aiService: 'AI analysis and processing';
+  evidenceService: 'Evidence management and evaluation';
+  reportService: 'Report generation and analytics';
+  notificationService: 'Real-time notifications and alerts';
+}
+This comprehensive technical documentation provides a complete overview of the Legal-Tech AI Assistant's architecture, implementation details, and operational considerations. The system is designed for scalability, security, and maintainability while providing powerful AI-driven capabilities for law enforcement operations.
