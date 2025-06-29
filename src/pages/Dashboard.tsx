@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, TrendingUp, AlertTriangle, Users, Calendar, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
-import ConnectionStatusComponent from '../components/ConnectionStatus';
 
 const Dashboard: React.FC = () => {
   const stats = [
@@ -91,9 +90,6 @@ const Dashboard: React.FC = () => {
           Streamline petition processing, claims analysis, and evidence evaluation with AI-powered insights.
         </p>
       </div>
-
-      {/* Connection Status */}
-      <ConnectionStatusComponent />
 
       {/* Stats Grid */}
       <motion.div
